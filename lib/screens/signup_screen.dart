@@ -23,12 +23,52 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _usernameController = TextEditingController();
 
   Uint8List? selectedImage;
+  bool isLoading = false;
   @override
   void dispose() {
     _emailController.dispose();
     _passController.dispose();
     _bioController.dispose();
     _usernameController.dispose();
+  }
+
+  void signUp() async {
+    if (selectedImage == null) {
+      showSnackBar(context, "Please select a profile pic");
+    }
+    if (_emailController.text.isEmpty ||
+        _passController.text.isEmpty ||
+        _bioController.text.isEmpty ||
+        _usernameController.text.isEmpty) {
+      showSnackBar(context, "Error! Fields cannot be empty");
+    } else {
+      setState(() {
+        isLoading = true;
+      });
+
+      String res = await AuthMethods().signUpUser(
+          username: _usernameController.text,
+          email: _emailController.text,
+          password: _passController.text,
+          bio: _bioController.text,
+          file: selectedImage!);
+      debugPrint(res);
+
+      if (res != "Success") {
+        //    _usernameController.clear();
+        // _emailController.clear();
+        // _passController.clear();
+        // _bioController.clear();
+        showSnackBar(context, res);
+      } else {
+        showSnackBar(context, res);
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const LoginScreen()));
+      }
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   void selectImage() async {
@@ -109,15 +149,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   height: 24,
                 ),
                 InkWell(
-                  onTap: () async {
-                    String res = await AuthMethods().signUpUser(
-                        username: _usernameController.text,
-                        email: _emailController.text,
-                        password: _passController.text,
-                        bio: _bioController.text,
-                        file: selectedImage!);
-                    debugPrint(res);
-                  },
+                  onTap: signUp,
                   child: Container(
                     alignment: Alignment.center,
                     width: double.infinity,
@@ -127,7 +159,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         shape: RoundedRectangleBorder(
                             borderRadius:
                                 BorderRadius.all(Radius.circular(4)))),
-                    child: const Text("Sign up"),
+                    child: (isLoading)
+                        ? const CircularProgressIndicator(
+                            strokeWidth: 2.0,
+                            color: Colors.white,
+                          )
+                        : const Text("Sign up"),
                   ),
                 ),
                 Flexible(
