@@ -1,10 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import './utils/colors.dart';
-// import './responsive/responsive_layout_screen.dart';
-// import './responsive/mobile_screen_layout.dart';
-// import './responsive/webs_screen_layout.dart';
+import './responsive/responsive_layout_screen.dart';
+import './responsive/mobile_screen_layout.dart';
+import './responsive/webs_screen_layout.dart';
 import './screens/login_screen.dart';
 
 void main() async {
@@ -35,11 +36,29 @@ class MyApp extends StatelessWidget {
         title: 'Instagram Clone',
         theme: ThemeData.dark()
             .copyWith(scaffoldBackgroundColor: mobileBackgroundColor),
-        home: const Scaffold(
+        home: Scaffold(
           // body: ResponsiveLayout(
           //     mobileViewWidget: MobileViewWidget(),
           //     webViewWidget: WebViewWidget())),
-          body: LoginScreen(),
+          body: StreamBuilder(
+              stream: FirebaseAuth.instance.authStateChanges(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.active) {
+                  if (snapshot.hasData) {
+                    return const ResponsiveLayout(
+                        mobileViewWidget: MobileViewWidget(),
+                        webViewWidget: WebViewWidget());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text("${snapshot.error}"));
+                  }
+                }
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: primaryColor),
+                  );
+                }
+                return const LoginScreen();
+              }),
         ));
   }
 }
