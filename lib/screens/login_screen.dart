@@ -25,6 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     _emailController.dispose();
     _passController.dispose();
+    super.dispose();
   }
 
   void loginUser() async {
